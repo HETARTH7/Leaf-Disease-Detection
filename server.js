@@ -6,8 +6,8 @@ const http = require("http");
 const app = express();
 
 const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
+const socketio = require("socket.io");
+const io = socketio(server);
 const userRouter = require("./routes/userRouter");
 const messageRouter = require("./routes/messageRouter");
 
@@ -23,6 +23,11 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Socket disconnected:", socket.id);
+  });
+
+  socket.on("message", (message) => {
+    // Handle the received message
+    console.log("Received new message:", message);
   });
 });
 
