@@ -1,17 +1,20 @@
 const express = require("express");
-const app = express();
-http = require("http");
+const mongoose = require("mongoose");
 const cors = require("cors");
-const { Server } = require("socket.io");
+const connectDB = require("./config/dbConfig");
+const credentials = require("./middleware/credentials");
+const corsOptions = require("./config/corsOptions");
 
-app.use(cors());
+const port = 5000;
 
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
+const app = express();
+app.use(credentials);
+app.use(cors(corsOptions));
+app.use(express.json());
 
-server.listen(5000, () => console.log("Server is running on port 5000"));
+connectDB();
+
+app.use("/register", require("./route/register"));
+app.use("/auth", require("./route/login"));
+
+app.listen(port, () => console.log(`Server listening at port ${port}`));

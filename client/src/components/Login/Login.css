@@ -1,0 +1,19 @@
+.container {
+  text-align: center;
+  padding: 3rem;
+  height: 610px;
+}
+
+.heading {
+  font-size: 3rem;
+}
+
+.login-container {
+  background-color: white;
+  margin-left: 37%;
+  width: 27%;
+}
+
+.btn {
+  border-radius: 7px;
+}
