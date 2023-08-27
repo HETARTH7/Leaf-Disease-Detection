@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Login.css";
 import axios from "../../api/axios";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [isNew, setIsNew] = useState(false);
@@ -8,7 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [pwd, setpwd] = useState("");
   const [img, setImg] = useState("");
-
+  const navigate = useNavigate();
   const handleChangeUser = (e) => {
     setname(e.target.value);
   };
@@ -22,14 +23,20 @@ const Login = () => {
 
   const handleRegister = async (e) => {
     try {
+      e.preventDefault();
       await axios.post("/register", { name, email, pwd });
     } catch (err) {
       console.log(err);
     }
   };
-  const handleLogin = (e) => {
-    e.preventDefault();
-    console.log({ name, pwd });
+  const handleLogin = async (e) => {
+    try {
+      e.preventDefault();
+      const response = await axios.post("/auth", { email, pwd });
+      response.status === 201 ? navigate("/chat") : alert("Something's wrong");
+    } catch (err) {
+      console.log(err);
+    }
   };
   return (
     <div className="container">
