@@ -4,6 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/dbConfig");
 const credentials = require("./middleware/credentials");
 const corsOptions = require("./config/corsOptions");
+const io = require("socket.io");
 
 const port = 5000;
 
