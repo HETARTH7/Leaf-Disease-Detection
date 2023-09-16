@@ -1,8 +1,12 @@
 import React, { useState } from "react";
+import axios from "../api/axios.js";
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
+
+  const navigate = useNavigate();
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
@@ -12,10 +16,15 @@ const Register = () => {
     setPwd(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = { email, pwd };
-    console.log(user);
+    try {
+      const user = { email, pwd };
+      await axios.post("/auth", user);
+      navigate("/chat");
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
