@@ -1,23 +1,24 @@
-import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Home from "./components/Home";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import Chats from "./components/Chats";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./components/Login.jsx";
+import Signup from "./components/Signup.jsx";
+import Root from "./components/Root.jsx";
+import Home from "./components/Home.jsx";
 
-const App = () => {
+function App() {
   return (
-    <div>
+    <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/:name" element={<Chats />} />
-        </Routes>
+        <div className="pages">
+          <Routes>
+            <Route path="/" element={<Root />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/home" element={<Home />} />
+          </Routes>
+        </div>
       </BrowserRouter>
     </div>
   );
-};
+}
 
 export default App;

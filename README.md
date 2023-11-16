@@ -29,17 +29,20 @@ Check node version:
     "@testing-library/user-event": "^13.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.15.0",
+    "react-router-dom": "^6.18.0",
     "react-scripts": "5.0.1",
     "socket.io-client": "^4.7.2",
     "web-vitals": "^2.1.4"
 
 ## server
 
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "mongoose": "^7.2.2",
-    "socket.io": "^4.6.2"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.1",
+    "socket.io": "^4.7.2",
+    "validator": "^13.11.0"
 
 ## Run this project
 
