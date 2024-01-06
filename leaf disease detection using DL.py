@@ -62,15 +62,18 @@ def tf_equalize(image):
     image_flat = tf.reshape(image, [-1])
     indices = tf.cast(image_flat, tf.int32)
     eq_hist_flat = tf.gather(px_map, indices)
+
+    # Cast the equalized image to tf.float32
     eq_hist = tf.reshape(eq_hist_flat, tf.shape(image))
+    eq_hist = tf.cast(eq_hist, tf.float32)
 
     return eq_hist
 
 
-equalized = train_ds.map(lambda x, y: (tf_equalize(x), y))
+train_ds = train_ds.map(lambda x, y: (tf_equalize(x), y))
 
 plt.figure(figsize=(10, 10))
-for images, labels in equalized.take(1):
+for images, labels in train_ds.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
         plt.imshow(images[i].numpy().astype("uint8"))
@@ -86,39 +89,39 @@ data_augmentation = keras.Sequential([
     layers.RandomFlip("horizontal"),
 ])
 
-aug_ds = train_ds.concatenate(train_ds.map(
+train_ds1 = train_ds.concatenate(train_ds.map(
     lambda x, y: (data_augmentation(x, training=True), y)))
 
 data_augmentation = keras.Sequential([
     layers.RandomFlip("vertical"),
 ])
 
-aug_ds = aug_ds.concatenate(train_ds.map(
+train_ds1 = train_ds1.concatenate(train_ds.map(
     lambda x, y: (data_augmentation(x, training=True), y)))
 
 data_augmentation = keras.Sequential([
     layers.RandomFlip("horizontal_and_vertical"),
 ])
 
-aug_ds = aug_ds.concatenate(train_ds.map(
+train_ds1 = train_ds1.concatenate(train_ds.map(
     lambda x, y: (data_augmentation(x, training=True), y)))
 
 plt.figure(figsize=(10, 10))
-for images, labels in aug_ds.take(1):
+for images, labels in train_ds1.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
         plt.imshow(images[i].numpy().astype("uint8"))
         plt.title(class_names[labels[i]])
         plt.axis("off")
 
-for image_batch, labels_batch in aug_ds:
+for image_batch, labels_batch in train_ds1:
     print(image_batch.shape)
     print(labels_batch.shape)
     break
 
 train_ds_size = tf.data.experimental.cardinality(train_ds).numpy()
 
-aug_ds_size = tf.data.experimental.cardinality(aug_ds).numpy()
+train_ds1_size = tf.data.experimental.cardinality(train_ds1).numpy()
 
 print(f"Original dataset size: {train_ds_size}")
-print(f"Augmented dataset size: {aug_ds_size}")
+print(f"Augmented dataset size: {train_ds1_size}")
