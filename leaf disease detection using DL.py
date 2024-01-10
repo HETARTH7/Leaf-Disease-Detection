@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from os import listdir
 import PIL
 import PIL.Image
 import tensorflow as tf
@@ -9,35 +10,52 @@ import cv2
 
 from keras import layers
 import keras
+from keras.preprocessing import image
+from keras.preprocessing.image import img_to_array
 
 batch_size = 32
 img_height = 180
 img_width = 180
+default_image_size = tuple((256, 256))
 data_dir = './plant_village_dataset'
 
-train_ds = tf.keras.utils.image_dataset_from_directory(
+ds = tf.keras.utils.image_dataset_from_directory(
     data_dir,
-    validation_split=0.2,
-    subset="training",
     seed=123,
     batch_size=batch_size,
     color_mode="grayscale",
     image_size=(img_height, img_width),
 )
 
-val_ds = tf.keras.utils.image_dataset_from_directory(
-    data_dir,
-    validation_split=0.2,
-    subset="validation",
-    seed=123,
-    batch_size=batch_size,
-    color_mode="grayscale",
-    image_size=(img_height, img_width),
-)
+ds_size = tf.data.experimental.cardinality(ds).numpy()
+print(ds_size)
 
-class_names = train_ds.class_names
+
+def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+    assert (train_split + test_split + val_split) == 1
+
+    if shuffle:
+        ds = ds.shuffle(shuffle_size, seed=123)
+
+    train_size = int(train_split * ds_size)
+    val_size = int(val_split * ds_size)
+
+    train_ds = ds.take(train_size)
+    val_ds = ds.skip(train_size).take(val_size)
+    test_ds = ds.skip(train_size).skip(val_size)
+
+    return train_ds, val_ds, test_ds
+
+
+train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, ds_size)
+
+class_names = ds.class_names
 print(class_names)
-train_ds
+
+train_size = tf.data.experimental.cardinality(train_ds).numpy()
+test_size = tf.data.experimental.cardinality(test_ds).numpy()
+val_size = tf.data.experimental.cardinality(val_ds).numpy()
+print(train_size, test_size, val_size)
 
 plt.figure(figsize=(10, 10))
 for images, labels in train_ds.take(1):
@@ -85,42 +103,48 @@ data_augmentation = keras.Sequential([
     layers.RandomFlip("horizontal"),
 ])
 
-train1 = train_ds.concatenate(train_ds.map(
+flipped_train = train_ds.concatenate(train_ds.map(
+    lambda x, y: (data_augmentation(x, training=True), y)))
+flipped_test = test_ds.concatenate(test_ds.map(
     lambda x, y: (data_augmentation(x, training=True), y)))
 
 data_augmentation = keras.Sequential([
     layers.RandomFlip("vertical"),
 ])
 
-train1 = train1.concatenate(train_ds.map(
+flipped_train = train_ds.concatenate(train_ds.map(
+    lambda x, y: (data_augmentation(x, training=True), y)))
+flipped_test = test_ds.concatenate(test_ds.map(
     lambda x, y: (data_augmentation(x, training=True), y)))
 
 data_augmentation = keras.Sequential([
     layers.RandomFlip("horizontal_and_vertical"),
 ])
 
-train1 = train1.concatenate(train_ds.map(
+flipped_train = train_ds.concatenate(train_ds.map(
+    lambda x, y: (data_augmentation(x, training=True), y)))
+flipped_test = test_ds.concatenate(test_ds.map(
     lambda x, y: (data_augmentation(x, training=True), y)))
 
 plt.figure(figsize=(10, 10))
-for images, labels in train1.take(1):
+for images, labels in flipped_train.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
         plt.imshow(images[i].numpy().astype("uint8"), cmap="Greys_r")
         plt.title(class_names[labels[i]])
         plt.axis("off")
 
-for image_batch, labels_batch in train1:
+for image_batch, labels_batch in flipped_train:
     print(image_batch.shape)
     print(labels_batch.shape)
     break
 
 train_ds_size = tf.data.experimental.cardinality(train_ds).numpy()
 
-train1_size = tf.data.experimental.cardinality(train1).numpy()
+flipped_ds_size = tf.data.experimental.cardinality(flipped_train).numpy()
 
 print(f"Original dataset size: {train_ds_size}")
-print(f"Augmented dataset size: {train1_size}")
+print(f"Augmented dataset size: {flipped_ds_size}")
 
 
 def add_salt_and_pepper_noise(image, salt_prob=0.2, pepper_prob=0.2):
@@ -133,14 +157,17 @@ def add_salt_and_pepper_noise(image, salt_prob=0.2, pepper_prob=0.2):
     return noisy_image
 
 
-train2 = train_ds.map(lambda x, y: (add_salt_and_pepper_noise(x), y))
-train2 = train2.concatenate(train_ds)
+noisy_train = train_ds.map(lambda x, y: (add_salt_and_pepper_noise(x), y))
+noisy_train = noisy_ds.concatenate(train_ds)
 
-train2_size = tf.data.experimental.cardinality(train2).numpy()
-print(f"Salt and Pepper Augmented dataset size: {train2_size}")
+noisy_test = test_ds.map(lambda x, y: (add_salt_and_pepper_noise(x), y))
+noisy_test = noisy_test.concatenate(test_ds)
+
+noisy_ds_size = tf.data.experimental.cardinality(noisy_train).numpy()
+print(f"Salt and Pepper Augmented dataset size: {noisy_ds_size}")
 
 plt.figure(figsize=(10, 10))
-for images, labels in train2.take(1):
+for images, labels in noisy_train.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
         plt.imshow(images[i].numpy().astype("uint8"), cmap="Greys_r")
